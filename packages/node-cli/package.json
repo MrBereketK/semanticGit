@@ -1,0 +1,15 @@
+{
+  "name": "node-cli",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "semgit": "./src/index.js"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.7.0",
+    "@octokit/auth-app": "^8.2.0",
+    "@octokit/auth-oauth-device": "^8.0.3",
+    "node-fetch": "^3.3.2"
+  }
+}
