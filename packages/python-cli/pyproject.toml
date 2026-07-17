@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "semgit-ai-engine"  # Change this to whatever unique name you decide on PyPI!
+version = "1.0.0"
+description = "AI-assisted interactive Conventional Commits engine"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31.0",
+    "questionary>=2.0.1",
+]
+
+[project.scripts]
+semgit = "semgit.cli:main"  # Runs the main() function inside semgit/cli.py when typing 'semgit'
+
+[tool.hatch.build.targets.wheel]
+packages = ["semgit"]
