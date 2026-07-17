@@ -1,5 +1,5 @@
 {
-  "name": "semantic-git-cli",
+  "name": "semgit-ai-engine",
   "version": "1.0.0",
   "description": "An AI-powered interactive CLI that turns messy thoughts into structured conventional commits.",
   "type": "module",
@@ -7,7 +7,13 @@
   "bin": {
     "semgit": "./src/index.js"
   },
-  "keywords": ["git", "conventional-commits", "ai", "cli", "automation"],
+  "keywords": [
+    "git",
+    "conventional-commits",
+    "ai",
+    "cli",
+    "automation"
+  ],
   "author": "Bereket Kiros",
   "license": "MIT",
   "dependencies": {
