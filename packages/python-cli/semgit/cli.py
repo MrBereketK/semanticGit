@@ -1,8 +1,10 @@
 import sys
 import subprocess
 import questionary
-from auth import login_with_github
-from api import generate_commit_options
+
+# (adding the dot '.' tells Python to look in the same folder):
+from .auth import login_with_github
+from .api import generate_commit_options
 
 def is_git_repository():
     try:
