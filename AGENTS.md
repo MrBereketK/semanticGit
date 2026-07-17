@@ -15,7 +15,7 @@ semantic-git/
 
 ## Running the CLIs
 
-**Node CLI:**
+<!-- **Node CLI:**
 ```bash
 cd packages/node-cli
 node src/index.js
@@ -24,7 +24,15 @@ node src/index.js
 **Python CLI:**
 ```bash
 cd packages/python-cli
-python semgit/cli.py
+python semgit/cli.py -->
+## Installation
+
+```bash
+# For Python users
+pip install semgit-ai-engine
+
+# For Node users
+npm install -g semgit-core
 ```
 Note: Python CLI uses bare imports (`from auth import...`), must run as script, not module.
 
