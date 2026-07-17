@@ -1,11 +1,15 @@
 {
-  "name": "node-cli",
+  "name": "semantic-git-cli",
   "version": "1.0.0",
+  "description": "An AI-powered interactive CLI that turns messy thoughts into structured conventional commits.",
   "type": "module",
   "main": "src/index.js",
   "bin": {
     "semgit": "./src/index.js"
   },
+  "keywords": ["git", "conventional-commits", "ai", "cli", "automation"],
+  "author": "Bereket Kiros",
+  "license": "MIT",
   "dependencies": {
     "@clack/prompts": "^1.7.0",
     "@octokit/auth-app": "^8.2.0",
