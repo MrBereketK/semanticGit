@@ -1,7 +1,10 @@
 import requests
 import json
 
-ENDPOINT = "https://models.inference.ai.azure.com/chat/completions"
+# ENDPOINT = "https://models.inference.ai.azure.com/chat/completions"
+
+# 🚀 CORRECTED LIVE URL
+ENDPOINT = "https://models.github.ai/inference/chat/completions"
 
 def generate_commit_options(casual_message, github_token):
     system_instruction = """
