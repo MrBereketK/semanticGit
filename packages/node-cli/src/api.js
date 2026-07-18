@@ -9,7 +9,10 @@ import fetch from "node-fetch";
  */
 export async function generateCommitOptions(casualMessage, githubToken) {
   // Direct entrypoint for GitHub Models infrastructure
-  const ENDPOINT = "https://models.inference.ai.azure.com/chat/completions";
+  // const ENDPOINT = "https://models.inference.ai.azure.com/chat/completions";
+
+  // 🚀 CORRECTED LIVE URL
+  const ENDPOINT = "https://models.github.ai/inference/chat/completions";
 
   const systemInstruction = `
 You are a strict Git Version Control specialist enforcing the Conventional Commits 1.0.0 specification. 
