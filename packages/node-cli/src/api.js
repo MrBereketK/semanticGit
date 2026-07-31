@@ -1,18 +1,15 @@
 import fetch from "node-fetch";
 
 /**
- * Sends the casual message to the free GitHub Models API
+ * Sends the casual message to Groq's fast AI API
  * and returns exactly 3 formalized Conventional Commit choices.
  * @param {string} casualMessage - The messy input from the developer
- * @param {string} githubToken - The fresh user access token from device flow
+ * @param {string} apiKey - The user's stored Groq API key
  * @returns {Promise<Object>} An object containing the 3 structured choices
  */
-export async function generateCommitOptions(casualMessage, githubToken) {
-  // Direct entrypoint for GitHub Models infrastructure
-  // const ENDPOINT = "https://models.inference.ai.azure.com/chat/completions";
-
-  // 🚀 CORRECTED LIVE URL
-  const ENDPOINT = "https://models.github.ai/inference/chat/completions";
+export async function generateCommitOptions(casualMessage, apiKey) {
+  // 🚀 Active Groq AI Endpoint
+  const ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
   const systemInstruction = `
 You are a strict Git Version Control specialist enforcing the Conventional Commits 1.0.0 specification. 
@@ -31,7 +28,7 @@ Types allowed: feat, fix, docs, style, refactor, perf, test, build, ci, chore.
 `;
 
   const payload = {
-    model: "gpt-4o-mini", // Targeted optimized free-tier model
+    model: "llama-3.3-70b-versatile",
     messages: [
       { role: "system", content: systemInstruction },
       {
@@ -44,13 +41,11 @@ Types allowed: feat, fix, docs, style, refactor, perf, test, build, ci, chore.
   };
 
   try {
-    console.log("🤖 Analyzing changes and generating semantic options...");
-
     const response = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${githubToken}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(payload),
     });
@@ -73,10 +68,7 @@ Types allowed: feat, fix, docs, style, refactor, perf, test, build, ci, chore.
 
     return JSON.parse(aiResponseText);
   } catch (error) {
-    console.error(
-      "❌ Failed to communicate with free AI engine:",
-      error.message,
-    );
+    console.error("\n❌ Failed to communicate with AI engine:", error.message);
     process.exit(1);
   }
 }

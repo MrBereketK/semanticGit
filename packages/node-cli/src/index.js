@@ -3,6 +3,7 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
+import fetch from "node-fetch";
 import { loginWithGitHub } from "./auth.js";
 import { generateCommitOptions } from "./api.js";
 import {
@@ -16,8 +17,8 @@ import {
 } from "@clack/prompts";
 import { execSync } from "child_process";
 
-// Shared configuration location matching the Python tool exactly
 const TOKEN_PATH = path.join(os.homedir(), ".semanticgit_token");
+const CURRENT_VERSION = "1.2.0"; // Matches package.json
 
 function isGitRepository() {
   try {
@@ -28,9 +29,38 @@ function isGitRepository() {
   }
 }
 
+/**
+ * Checks npm registry in the background to notify users if an update is available.
+ */
+async function checkForUpdates() {
+  try {
+    const res = await fetch(
+      "[https://registry.npmjs.org/semgit-ai-engine/latest](https://registry.npmjs.org/semgit-ai-engine/latest)",
+      {
+        timeout: 1500,
+      },
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (data.version && data.version !== CURRENT_VERSION) {
+        note(
+          `🔔 A new version (v${data.version}) of SemanticGit is available!\n` +
+            `Run: npm install -g semgit-ai-engine@latest`,
+          "Update Notice",
+        );
+      }
+    }
+  } catch {
+    // Fail silently so it never slows down offline or slow connections
+  }
+}
+
 async function main() {
   console.clear();
   intro("🚀 SemanticGit Core Engine");
+
+  // Check for registry updates silently in parallel
+  checkForUpdates();
 
   if (!isGitRepository()) {
     outro("❌ Error: This directory is not an active Git repository.");
@@ -39,27 +69,25 @@ async function main() {
 
   let token = await loginWithGitHub();
 
-  // ─── 🛠️ AUTOMATIC NODE FIRST-TIME SETUP ───
+  // ─── 🛠️ AUTOMATIC FIRST-TIME SETUP ───
   if (!token) {
     note(
-      "Click this pre-filled link, scroll to the bottom, and click the green button:\n\n" +
-        "👉 https://github.com/settings/tokens/new?description=SemanticGit%20CLI&scopes=",
-      "👋 First-time setup! Connect to the free AI engine",
+      "Get a free API key in 30 seconds (1-click sign in with GitHub/Google):\n\n" +
+        "👉 [https://console.groq.com/keys](https://console.groq.com/keys)",
+      "👋 First-time setup! Connect to the AI Engine",
     );
 
     const userToken = await password({
-      message: "Paste your generated GitHub token here:",
+      message: "Paste your API key here:",
       mask: "*",
       validate(value) {
         const cleanValue = value ? value.trim() : "";
-        if (cleanValue.length === 0) return "Token cannot be empty!";
+        if (cleanValue.length === 0) return "API Key cannot be empty!";
       },
     });
 
     if (typeof userToken === "symbol" || !userToken) {
-      outro(
-        "❌ Setup cancelled. A token is required to authenticate with the AI engine.",
-      );
+      outro("❌ Setup cancelled. An API key is required to use the engine.");
       process.exit(1);
     }
 
@@ -72,7 +100,7 @@ async function main() {
       process.exit(1);
     }
   }
-  // ──────────────────────────────────────────
+  // ──────────────────────────────────────
 
   const casualMessage = await text({
     message: "What changes did you make? (Plain English)",
@@ -112,7 +140,7 @@ async function main() {
         },
         {
           value: options.option_detailed,
-          label: `📄 Detailed: "${options.option_short}" (+ Append Body Explainer)`,
+          label: `📄 Detailed: "${options.option_detailed}"`,
         },
         {
           value: options.option_scope_focused,
