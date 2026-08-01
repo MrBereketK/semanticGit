@@ -1,104 +1,114 @@
 import os
 import sys
 import subprocess
-import questionary
-
-# Using relative imports so the package modules find each other properly when installed globally
-from .auth import TOKEN_PATH, login_with_github
+import requests
+import getpass
+from .auth import login_with_github, TOKEN_PATH
 from .api import generate_commit_options
+
+CURRENT_VERSION = "1.2.0"
 
 def is_git_repository():
     try:
-        subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
         return True
     except subprocess.CalledProcessError:
         return False
 
+def check_for_updates():
+    """Silently checks PyPI in the background for new package updates."""
+    try:
+        response = requests.get("https://pypi.org/pypi/semgit-ai-engine/json", timeout=1.5)
+        if response.status_code == 200:
+            latest_version = response.json()["info"]["version"]
+            if latest_version != CURRENT_VERSION:
+                print(
+                    f"\n🔔 A new version (v{latest_version}) of SemanticGit is available!\n"
+                    f"   Run: pip install --upgrade semgit-ai-engine\n"
+                )
+    except Exception:
+        pass
+
 def main():
-    print("\n🚀 SemanticGit Python Engine Active\n")
+    print("🚀 SemanticGit Core Engine\n")
+
+    check_for_updates()
 
     if not is_git_repository():
         print("❌ Error: This directory is not an active Git repository.")
         sys.exit(1)
 
     token = login_with_github()
-    
-    # --- AUTOMATIC FIRST-TIME SETUP ---
+
+    # ─── 🛠️ AUTOMATIC FIRST-TIME SETUP ───
     if not token:
-        print("👋 First-time setup! Let's connect your CLI to the free AI engine.")
-        print("💡 Click this pre-filled link, scroll to the bottom, and click the green 'Generate token' button:")
-        print("👉 https://github.com/settings/tokens/new?description=SemanticGit%20CLI&scopes=\n")
-        
-        # questionary.password masks the key input while typing so it stays secure
-        user_token = questionary.password("Paste your generated GitHub token here:").ask()
-        
-        if not user_token or user_token.strip() == "":
-            print("❌ Setup cancelled. A token is required to authenticate with the AI engine.")
+        print("👋 First-time setup! Connect to the AI Engine")
+        print("Get a free API key in 30 seconds (1-click sign in with GitHub/Google):")
+        print("👉 https://console.groq.com/keys\n")
+
+        try:
+            user_token = getpass.getpass("Paste your API key here: ").strip()
+        except KeyboardInterrupt:
+            print("\n❌ Setup cancelled.")
             sys.exit(1)
-            
-        # Dynamically create the file and save the token to their home profile directory
+
+        if not user_token:
+            print("❌ API Key cannot be empty!")
+            sys.exit(1)
+
         try:
             with open(TOKEN_PATH, "w", encoding="utf-8") as f:
-                f.write(user_token.strip())
-            print("✨ Key saved successfully! Moving forward with analysis...\n")
-            token = user_token.strip()
-        except Exception as e:
-            print(f"❌ Error saving token locally: {str(e)}")
+                f.write(user_token)
+            print("✨ Key saved safely to your local user profile!\n")
+            token = user_token
+        except Exception as err:
+            print(f"❌ Error saving token locally: {err}")
             sys.exit(1)
-    # ----------------------------------
+    # ──────────────────────────────────────
 
-    # 1. Prompt the user for input using questionary
-    casual_message = questionary.text(
-        "What changes did you make? (Plain English)",
-        placeholder="e.g., fixed dashboard crashing on refresh for phone screens"
-    ).ask()
+    casual_message = input("What changes did you make? (Plain English): ").strip()
+    if not casual_message:
+        print("❌ Input cannot be empty!")
+        sys.exit(1)
 
-    if not casual_message or casual_message.strip() == "":
-        print("👋 Operation cancelled or empty input.")
-        sys.exit(0)
+    print("🤖 Running semantic engine analysis...")
 
-    print("\n🤖 Running semantic engine analysis...")
-    
     try:
         options = generate_commit_options(casual_message, token)
-        print("✨ Semantic choices generated!\n")
+        
+        print("\n📋 Generated Options Preview:")
+        print(f"[1] Short:\n{options.get('option_short')}\n")
+        print(f"[2] Detailed:\n{options.get('option_detailed')}\n")
+        print(f"[3] Alternative Scope:\n{options.get('option_scope_focused')}\n")
 
-        # 2. Render the Preview Block
-        print("📋 Generated Options Preview:")
-        print(f" [1] Short: {options['option_short']}")
-        print(f" [2] Detailed: {options['option_detailed']}")
-        print(f" [3] Alternative: {options['option_scope_focused']}\n")
+        print("Select format:")
+        print("1. Short")
+        print("2. Detailed")
+        print("3. Alternative Scope")
+        
+        choice_num = input("Enter option (1-3): ").strip()
 
-        # 3. Present the interactive arrow-key list choice
-        choice = questionary.select(
-            "Use your arrow keys to select a format:",
-            choices=[
-                f"📝 Short: \"{options['option_short']}\"",
-                f"📄 Detailed: \"{options['option_short']}\" (+ Append Body Explainer)",
-                f"🎯 Alternative: \"{options['option_scope_focused']}\""
-            ]
-        ).ask()
-
-        if not choice:
-            print("👋 Operation cancelled.")
-            sys.exit(0)
-
-        # Map selected label back to the raw target string value
-        if "📝 Short" in choice:
-            final_message = options['option_short']
-        elif "📄 Detailed" in choice:
-            final_message = options['option_detailed']
+        if choice_num == "1":
+            selected_commit = options.get("option_short")
+        elif choice_num == "2":
+            selected_commit = options.get("option_detailed")
+        elif choice_num == "3":
+            selected_commit = options.get("option_scope_focused")
         else:
-            final_message = options['option_scope_focused']
+            print("❌ Invalid selection.")
+            sys.exit(1)
 
-        print(f"\nFinal Selected Commit:\n{final_message}\n")
+        # Natively run git commit
+        subprocess.run(["git", "commit", "-m", selected_commit], check=True)
+        print("\n🎉 Changes committed successfully!")
 
-        # 4. Natively execute the local Git commit
-        subprocess.run(["git", "commit", "-m", final_message], check=True)
-        print("🎉 Changes committed successfully via Python!")
-
-    except Exception as e:
-        print(f"⚠️ Error: {str(e)}. Make sure your changes are staged using 'git add .'")
+    except Exception as error:
+        print(f"\n⚠️ Process failed: {error}")
 
 if __name__ == "__main__":
     main()
